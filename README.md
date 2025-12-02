@@ -465,3 +465,11 @@ export class DatabaseService
 - `@prisma/client`: 7.0.1
 - `prisma`: 7.0.1
 - `@prisma/adapter-pg`: 7.0.1
+
+### Example DB Dump
+
+> [SQL](https://github.com/AllanOliveiraM/prisma-bug-report-many-to-many/blob/main/dump-dev-db.sql)
+
+### Related Docs
+
+> [https://www.prisma.io/docs/orm/prisma-schema/data-model/relations/many-to-many-relations](https://www.prisma.io/docs/orm/prisma-schema/data-model/relations/many-to-many-relations)
