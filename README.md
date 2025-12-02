@@ -1,3 +1,21 @@
+# prisma-bug-report-many-to-many
+
+## Installing
+
+```bash
+pnpm i
+```
+
+## Running reproduction code
+
+```bash
+pnpm db:migrate
+
+docker compose -f ./docker-compose.dev.yml up
+
+pnpm dev
+```
+
 ### Bug description
 
 Hi Prisma team 👋

@@ -1,12 +1,10 @@
 {
-  "name": "temp",
+  "name": "prisma-bug-report-many-to-many",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "dev": "tsx src/main.ts",
-    "db:up": "docker compose -f ./docker-compose.dev.yml up",
-    "db:down": "docker compose -f ./docker-compose.dev.yml down",
     "db:gen": "DATABASE_URL='_' prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:studio": "yarn prisma studio"
