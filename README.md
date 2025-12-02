@@ -60,7 +60,7 @@ Thanks a lot for taking a look at this! 🙏
 
 [Github Repo](https://github.com/AllanOliveiraM/prisma-bug-report-many-to-many)
 
-> [src/main.ts](src/main.ts) content
+> [src/main.ts](https://github.com/AllanOliveiraM/prisma-bug-report-many-to-many/blob/main/src/main.ts) content
 
 
 ```ts
@@ -282,7 +282,7 @@ Creating explicit relation tables?
 
 ### Prisma Schema & Queries
 
-> prisma/schema.prisma
+> [prisma/schema.prisma](https://github.com/AllanOliveiraM/prisma-bug-report-many-to-many/blob/main/prisma/schema.prisma)
 
 ```prisma
 generator client {
@@ -363,7 +363,7 @@ enum SystemCultureMode {
 
 Below are the most relevant SQL queries from the Prisma logs when running the `update` with `include: { DefaultProducerAttributions: true }`:
 
-> See [output-logs.sql](output-logs.sql)
+> See [output-logs.sql](https://github.com/AllanOliveiraM/prisma-bug-report-many-to-many/blob/main/output-logs.sql)
 
 ### Prisma Config
 
