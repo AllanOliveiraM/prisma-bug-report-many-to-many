@@ -58,7 +58,9 @@ Thanks a lot for taking a look at this! 🙏
 
 ## Reproduction code
 
-> src/main.ts content
+[Github Repo](https://github.com/AllanOliveiraM/prisma-bug-report-many-to-many)
+
+> [src/main.ts](src/main.ts) content
 
 
 ```ts
