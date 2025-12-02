@@ -1,0 +1,28 @@
+{
+  "name": "temp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx src/main.ts",
+    "db:up": "docker compose -f ./docker-compose.dev.yml up",
+    "db:down": "docker compose -f ./docker-compose.dev.yml down",
+    "db:gen": "DATABASE_URL='_' prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "yarn prisma studio"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.1",
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.0.1",
+    "@prisma/client": "^7.0.1",
+    "dotenv": "^17.2.3",
+    "tsx": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "prisma": "^7.0.1"
+  }
+}

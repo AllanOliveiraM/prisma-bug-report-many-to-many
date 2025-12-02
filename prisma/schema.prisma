@@ -1,0 +1,68 @@
+generator client {
+  provider   = "prisma-client"
+  output     = "./client"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name     String
+  timezone String
+  country  String
+  state    String
+  city     String
+
+  Producers                   Producer[]
+  TraceabilityTrackingOptions TraceabilityTrackingOptions[]
+}
+
+model TraceabilityTrackingOptions {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // other scalar fields omitted…
+
+  /// This is the "default producers" relation
+  DefaultProducerAttributions Producer[]
+
+  SystemCultureMode SystemCultureMode @default(RICE_WHITE)
+
+  Company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+
+  @@unique([SystemCultureMode, companyId])
+  @@index([createdAt])
+}
+
+model Producer {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isActive  Boolean  @default(true)
+
+  name        String
+  search_name String
+
+  // other scalar fields omitted…
+
+  /// Generic M:N relation to TraceabilityTrackingOptions
+  TraceabilityTrackingOptions TraceabilityTrackingOptions[]
+
+  Company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+
+  @@index([createdAt])
+}
+
+enum SystemCultureMode {
+  RICE_WHITE
+  RICE_PARBO
+}
