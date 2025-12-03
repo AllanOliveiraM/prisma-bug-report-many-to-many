@@ -1,26 +1,8 @@
-# prisma-bug-report-many-to-many
-
-## Installing
-
-```bash
-pnpm i
-```
-
-## Running reproduction code
-
-```bash
-pnpm db:migrate
-
-docker compose -f ./docker-compose.dev.yml up
-
-pnpm dev
-```
-
 ### Bug description
 
 Hi Prisma team 👋
 
-I'm facing a weird behavior with an **implicit many-to-many relation** in Prisma 7.0.1 using PostgreSQL:  
+I'm facing a weird behavior with an **implicit many-to-many relation** in Prisma 7.0.1 using PostgreSQL:
 the join table row *exists*, one side of the relation works correctly with `include`, but the opposite side always returns an empty array.
 
 It really looks like a mapping/implicit-M:N bug, so I wanted to report it with a minimal repro.
@@ -36,6 +18,7 @@ In the database, a typical row looks like:
 * `B` = `cmip0ihe00000gnflc6wt9eqs` (a `TraceabilityTrackingOptions.id`)
 
 ---
+
 #### Problem introduction:
 
 Reading from the **TraceabilityTrackingOptions** side (even right after the `update`) does **not**:
@@ -60,83 +43,118 @@ And a subsequent `findUnique` with `include: { DefaultProducerAttributions: true
 "DefaultProducerAttributions": []
 ```
 
+The SQL logged by Prisma for the include looks correct and the join row exists in the database, so it seems to be an internal mapping/loader issue.
+
 ---
 
 Thanks a lot for taking a look at this! 🙏
 
 ---
----
 
+---
 
 ### Severity
 
-🔹 Minor plus Major: Unexpected behavior, but does not block development, but production clients are noticing errors and trying to save again, and again...
+**Update**
+🔹🚨 Critical: Data loss, app crash, security issue
+
+> In practice, the bug causes users to think relations are not saved and retry multiple times, leading to inconsistent state and cascading side effects in server–client–server flows.
+
 
 ### Reproduction
 
-## Reproduction code
+> [Example to reproduce Github Repo](https://github.com/AllanOliveiraM/prisma-bug-report-many-to-many)
+
+#### Installing
+
+```bash
+pnpm i
+```
+
+#### Running reproduction code
+
+```bash
+pnpm db:migrate
+
+docker compose -f ./docker-compose.dev.yml up
+
+pnpm dev
+```
+
+#### Reproduction code
 
 [Github Repo](https://github.com/AllanOliveiraM/prisma-bug-report-many-to-many)
 
 > [src/main.ts](https://github.com/AllanOliveiraM/prisma-bug-report-many-to-many/blob/main/src/main.ts) content
 
-
 ```ts
-import 'dotenv/config'
+import "dotenv/config";
 
-import { PrismaClient } from '@main-db/client'
-import { PrismaPg } from '@prisma/adapter-pg'
+import { PrismaClient } from "@main-db/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
 const prisma = new PrismaClient({
   adapter,
 
   log: [
-    { emit: 'stdout', level: 'query' },
-    { emit: 'stdout', level: 'info' },
-    { emit: 'stdout', level: 'warn' },
-    { emit: 'stdout', level: 'error' },
+    { emit: "stdout", level: "query" },
+    { emit: "stdout", level: "info" },
+    { emit: "stdout", level: "warn" },
+    { emit: "stdout", level: "error" },
   ],
-  errorFormat: 'pretty',
-})
+  errorFormat: "pretty",
+});
+
+// ? Start DB: docker compose -f ./docker-compose.dev.yml up
+// ? Down DB: docker compose -f ./docker-compose.dev.yml down
 
 async function main() {
   // 1) Create a Company just to satisfy FKs (simplified)
-  const company = await prisma.company.create({
-    data: {
-      id: 'grano',
-      name: 'Test Company',
-      timezone: 'America/Sao_Paulo',
-      country: 'BR',
-      state: 'RS',
-      city: 'Pelotas',
+  const company = await prisma.company.upsert({
+    create: {
+      id: "grano",
+      name: "Test Company",
+      timezone: "America/Sao_Paulo",
+      country: "BR",
+      state: "RS",
+      city: "Pelotas",
     },
-  })
+    update: {},
+    where: {
+      id: "grano",
+    },
+  });
 
   // 2) Create a Producer
   const producer = await prisma.producer.create({
     data: {
-      name: 'Produtor 1',
-      search_name: 'Produtor 1',
+      name: "Produtor 1",
+      search_name: "Produtor 1",
       companyId: company.id,
     },
-  })
+  });
 
   // 3) Create a TraceabilityTrackingOptions record
-  const tto = await prisma.traceabilityTrackingOptions.create({
-    data: {
-      SystemCultureMode: 'RICE_WHITE',
+  const tto = await prisma.traceabilityTrackingOptions.upsert({
+    where: {
+      id: "TTO",
+    },
+    create: {
+      id: "TTO",
+      SystemCultureMode: "RICE_WHITE",
       companyId: company.id,
       DefaultProducerAttributions: {
         // try to connect on create as well
         connect: [{ id: producer.id }],
       },
     },
-  })
+    update: {},
+  });
 
-  console.log('Created Producer id:', producer.id)
-  console.log('Created TTO id:', tto.id)
+  console.log("Created Producer id:", producer.id);
+  console.log("Created TTO id:", tto.id);
 
   // 4) Update TTO using `set` to make it as explicit as possible
   const updated = await prisma.traceabilityTrackingOptions.update({
@@ -149,10 +167,10 @@ async function main() {
     include: {
       DefaultProducerAttributions: true,
     },
-  })
+  });
 
-  console.log('Updated TTO (include DefaultProducerAttributions):')
-  console.dir(updated, { depth: null })
+  console.log("Updated TTO (include DefaultProducerAttributions):");
+  console.dir(updated, { depth: null });
 
   // 5) Read from the Producer side
   const fromProducer = await prisma.producer.findUnique({
@@ -160,10 +178,10 @@ async function main() {
     include: {
       TraceabilityTrackingOptions: true,
     },
-  })
+  });
 
-  console.log('Producer with TraceabilityTrackingOptions:')
-  console.dir(fromProducer, { depth: null })
+  console.log("Producer with TraceabilityTrackingOptions:");
+  console.dir(fromProducer, { depth: null });
 
   // 6) Read from the TTO side again, just to be sure
   const fromTto = await prisma.traceabilityTrackingOptions.findUnique({
@@ -171,21 +189,22 @@ async function main() {
     include: {
       DefaultProducerAttributions: true,
     },
-  })
+  });
 
-  console.log('TTO with DefaultProducerAttributions (second read):')
-  console.dir(fromTto, { depth: null })
+  console.log("TTO with DefaultProducerAttributions (second read):");
+  console.dir(fromTto, { depth: null });
 }
 
 main().finally(async () => {
-  await prisma.$disconnect()
-})
-
+  await prisma.$disconnect();
+});
 ```
+
+---
 
 ### Expected vs. Actual Behavior
 
-## Actual behavior
+#### Actual behavior
 
 1. The join table has the expected row:
 
@@ -210,7 +229,7 @@ main().finally(async () => {
    // and it contains the TTO with id 'cmip0ihe00000gnflc6wt9eqs'
    ```
 
-3. Reading from the **TraceabilityTrackingOptions** side (even right after the `update`) does **not**:
+3. Reading from the **TraceabilityTrackingOptions** side (even right after the `update`) does **not** load the relation:
 
    ```ts
    const updated = await prisma.traceabilityTrackingOptions.update({
@@ -240,7 +259,7 @@ So:
 
 ---
 
-## Additional notes
+### Additional notes
 
 * I also tested an even more minimal update:
 
@@ -260,7 +279,7 @@ So:
 
 ---
 
-## Expected behavior
+### Expected behavior
 
 Given an implicit many-to-many relation:
 
@@ -281,6 +300,7 @@ and a join row `(A = producer.id, B = traceabilityTrackingOptions.id)` in `_Prod
 
 Instead, only the `Producer` side works; the `TraceabilityTrackingOptions` side always comes back empty even though the join table row exists and the SQL Prisma runs for the include looks correct.
 
+---
 
 ### Frequency
 
@@ -292,11 +312,16 @@ Both development and production
 
 ### Is this a regression?
 
-Crash in version >7.0.0
+Yes.
+
+This worked on Prisma 6.x (Rust client) and broke after upgrading to Prisma 7.0.1 with `engineType = "client"` and `@prisma/adapter-pg`.
+
 
 ### Workaround
 
-Creating explicit relation tables?
+Using explicit many-to-many join tables seems to avoid the issue.
+
+---
 
 ### Prisma Schema & Queries
 
@@ -371,17 +396,17 @@ enum SystemCultureMode {
   RICE_WHITE
   RICE_PARBO
 }
-
 ```
-
 
 ---
 
-## Logs & Debug Info
+### Logs & Debug Info
 
 Below are the most relevant SQL queries from the Prisma logs when running the `update` with `include: { DefaultProducerAttributions: true }`:
 
 > See [output-logs.sql](https://github.com/AllanOliveiraM/prisma-bug-report-many-to-many/blob/main/output-logs.sql)
+
+---
 
 ### Prisma Config
 
@@ -399,8 +424,9 @@ export default {
     url: env('DATABASE_URL'),
   },
 } satisfies PrismaConfig
-
 ```
+
+---
 
 ### For context
 
@@ -450,26 +476,18 @@ export class DatabaseService
     await this.$disconnect()
   }
 }
-
 ```
 
+---
 
 ### Environment & Setup
 
-- Database: PostgreSQL 15
-- OS: Ubuntu 25.04 | Any linux, tested 2
-- Node.js: v22.19.0
+* Database: PostgreSQL 15
+* OS: Ubuntu 25.04 | Any linux, tested 2
+* Node.js: v22.19.0
 
 ### Prisma Version
 
-- `@prisma/client`: 7.0.1
-- `prisma`: 7.0.1
-- `@prisma/adapter-pg`: 7.0.1
-
-### Example DB Dump
-
-> [SQL](https://github.com/AllanOliveiraM/prisma-bug-report-many-to-many/blob/main/dump-dev-db.sql)
-
-### Related Docs
-
-> [https://www.prisma.io/docs/orm/prisma-schema/data-model/relations/many-to-many-relations](https://www.prisma.io/docs/orm/prisma-schema/data-model/relations/many-to-many-relations)
+* `@prisma/client`: 7.0.1
+* `prisma`: 7.0.1
+* `@prisma/adapter-pg`: 7.0.1
