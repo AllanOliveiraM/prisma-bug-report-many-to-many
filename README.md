@@ -1,3 +1,11 @@
+# Fixed
+
+    Fixed in this versions:
+
+    "@prisma/adapter-pg": "^7.1.0",
+    "@prisma/client": "^7.1.0",
+    "prisma": "^7.1.0"
+
 ### Bug description
 
 Hi Prisma team 👋

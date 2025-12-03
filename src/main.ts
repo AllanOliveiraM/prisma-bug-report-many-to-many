@@ -103,6 +103,16 @@ async function main() {
 
   console.log("TTO with DefaultProducerAttributions (second read):");
   console.dir(fromTto, { depth: null });
+
+  console.log('!! Update:')
+  console.log(`
+    Fixed in this versions:
+
+    "@prisma/adapter-pg": "^7.1.0",
+    "@prisma/client": "^7.1.0",
+    "prisma": "^7.1.0"
+    `)
+
 }
 
 main().finally(async () => {
